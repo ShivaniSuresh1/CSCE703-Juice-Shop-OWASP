@@ -8,9 +8,8 @@ const searchEl   = document.getElementById("search");
 const searchInfo = document.getElementById("searchInfo");
 
 let products = [];
-let cart = {}; // product id -> quantity
+let cart = {};
 
-// Keep the cart in localStorage so it is still there after logging in.
 function saveCart() {
   try { localStorage.setItem("cart", JSON.stringify(cart)); } catch {}
 }
@@ -33,7 +32,6 @@ function show(text, cls) {
   msg.className = "msg " + cls;
 }
 
-// All text below is set with textContent, never innerHTML.
 function cell(text, cls) {
   const td = document.createElement("td");
   td.textContent = text;
@@ -45,7 +43,6 @@ function renderProducts() {
   const query = searchEl.value.trim();
   const list = products.filter(p => p.name.toLowerCase().includes(query.toLowerCase()));
 
-  // FIX 9 - search term shown with textContent, so markup in it is not executed.
   searchInfo.textContent = query ? 'Results for "' + query + '": ' + list.length : "";
 
   productsEl.textContent = "";
@@ -107,7 +104,6 @@ function changeQty(id, change) {
 }
 
 checkoutEl.addEventListener("click", async () => {
-  // Only ids and quantities are sent. The server looks up the prices itself.
   const items = Object.keys(cart).map(id => ({ id: Number(id), qty: cart[id] }));
   try {
     const res = await fetch("/api/checkout", {

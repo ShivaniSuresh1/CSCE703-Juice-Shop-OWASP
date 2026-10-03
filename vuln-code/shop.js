@@ -8,7 +8,7 @@ const searchEl   = document.getElementById("search");
 const searchInfo = document.getElementById("searchInfo");
 
 let products = [];
-let cart = {}; // product id -> quantity
+let cart = {};
 
 function saveCart() {
   try { localStorage.setItem("cart", JSON.stringify(cart)); } catch {}
@@ -21,7 +21,6 @@ function money(n) {
   return "$" + n.toFixed(2);
 }
 
-// The "session" is just the email in a normal cookie that JavaScript can read and change.
 function currentUser() {
   const match = /(?:^|;\s*)user=([^;]*)/.exec(document.cookie);
   return match ? decodeURIComponent(match[1]) : null;
@@ -31,7 +30,6 @@ function renderProducts() {
   const query = searchEl.value;
   const list = products.filter(p => p.name.toLowerCase().includes(query.toLowerCase()));
 
-  // VULNERABLE: search term is written as HTML, so <img src=x onerror=...> runs.
   searchInfo.innerHTML = query ? "Results for " + query + ": " + list.length : "";
 
   let rows = "";
@@ -76,14 +74,12 @@ function changeQty(id, change) {
 }
 
 checkoutEl.addEventListener("click", async () => {
-  // VULNERABLE: the login check only happens here in the browser.
   if (!currentUser()) {
     msg.innerHTML = "<span class='err'>Please log in to check out.</span>";
     setTimeout(() => { window.location.href = "index.html"; }, 1000);
     return;
   }
 
-  // VULNERABLE: the browser sends the prices and the server trusts them.
   const items = [];
   for (const p of products) {
     if (cart[p.id]) items.push({ id: p.id, name: p.name, price: p.price, qty: cart[p.id] });
@@ -105,7 +101,6 @@ checkoutEl.addEventListener("click", async () => {
 function renderAccount() {
   const user = currentUser();
   if (user) {
-    // VULNERABLE: cookie value is written as HTML.
     accountEl.innerHTML = "Logged in as " + user + " <button id='logout'>Logout</button>";
     document.getElementById("logout").addEventListener("click", () => {
       document.cookie = "user=; Path=/; Max-Age=0";

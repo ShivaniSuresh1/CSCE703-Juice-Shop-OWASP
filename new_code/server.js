@@ -14,7 +14,6 @@ alasql("CREATE TABLE users (email STRING, pass_hash STRING)");
 const seedHash = bcrypt.hashSync("Sup3rSecret!", 12);
 alasql("INSERT INTO users VALUES (?,?)", ["admin@juice.sh", seedHash]);
 
-// FIX 7 - server-side sessions: random unguessable id in an HttpOnly cookie.
 const SESSION_MS = 60 * 60 * 1000;
 const sessions = new Map(); // sid -> { email, expires }
 
@@ -26,8 +25,6 @@ function getSession(req) {
   return { sid: match[1], ...session };
 }
 
-// HttpOnly: JS can't read it (XSS can't steal it). SameSite=Strict: other sites can't send it (CSRF).
-// Add "; Secure" when served over HTTPS.
 function setSessionCookie(res, sid, maxAgeSec) {
   res.setHeader("Set-Cookie",
     `sid=${sid}; HttpOnly; SameSite=Strict; Path=/; Max-Age=${maxAgeSec}`);
@@ -48,7 +45,7 @@ app.post("/api/login", (req, res) => {
   // FIX 6 - verify password against the stored bcrypt hash.
   if (rows.length > 0 && bcrypt.compareSync(password, rows[0].pass_hash)) {
     const old = getSession(req);
-    if (old) sessions.delete(old.sid); // fresh id on every login (no session fixation)
+    if (old) sessions.delete(old.sid);
     const sid = crypto.randomBytes(32).toString("hex");
     sessions.set(sid, { email, expires: Date.now() + SESSION_MS });
     setSessionCookie(res, sid, SESSION_MS / 1000);
@@ -85,7 +82,6 @@ const products = [
 app.get("/api/products", (req, res) => res.json(products));
 
 app.post("/api/checkout", (req, res) => {
-  // FIX 8 - checkout is enforced on the server, not just hidden in the UI.
   if (!getSession(req))
     return res.status(401).json({ message: "Please log in to check out." });
 
@@ -93,7 +89,6 @@ app.post("/api/checkout", (req, res) => {
   if (!Array.isArray(items) || items.length === 0 || items.length > 50)
     return res.status(400).json({ message: "Cart is empty or invalid." });
 
-  // Prices come from the server's catalogue, never from the client.
   let total = 0;
   for (const item of items) {
     const product = products.find((p) => p.id === item.id);

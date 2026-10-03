@@ -24,8 +24,6 @@ app.post("/api/login", (req, res) => {
   try { rows = alasql(query); } catch (err) { rows = []; }
 
   // Echoes the raw email back
-  // VULNERABLE: the "session" is the raw email in a cookie with no HttpOnly or SameSite.
-  // Anyone can forge it with document.cookie = "user=..." in the browser console.
   if (rows.length > 0) {
     res.setHeader("Set-Cookie", "user=" + encodeURIComponent(email) + "; Path=/");
     return res.json({ message: "Welcome back, " + email + "!" });
@@ -46,10 +44,8 @@ const products = [
 app.get("/api/products", (req, res) => res.json(products));
 
 app.post("/api/checkout", (req, res) => {
-  // VULNERABLE: no login check here; the shop page only hides checkout from guests.
   const items = (req.body && req.body.items) || [];
 
-  // VULNERABLE: trusts the price and quantity sent by the client (even 0.01 or -5).
   let total = 0;
   for (const item of items) total += item.price * item.qty;
   res.json({ message: "Order placed! Total charged: $" + total.toFixed(2), total });
