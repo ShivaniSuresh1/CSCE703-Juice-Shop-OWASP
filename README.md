@@ -27,7 +27,7 @@ After logging in you are taken to `shop.html`. You can also open it as a guest
 from the link under the login form.
 
 - Six juices to browse, with a search box (also works as `shop.html?q=apple`)
-- A cart with +/− quantity buttons and a running total; the cart is kept in the
+- A cart with +/- quantity buttons and a running total; the cart is kept in the
   browser, so it survives going to the login page and back
 - **Checkout requires login** – guests are sent to the login page and come back
   to the shop with their cart intact

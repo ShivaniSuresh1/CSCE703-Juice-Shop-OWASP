@@ -8,29 +8,24 @@ const searchEl   = document.getElementById("search");
 const searchInfo = document.getElementById("searchInfo");
 
 let products = [];
-const cart = new Map(); // productId -> quantity
+let cart = {}; // product id -> quantity
 
-// Cart survives the trip to the login page. Storage can be unavailable, so ignore failures.
+// Keep the cart in localStorage so it is still there after logging in.
 function saveCart() {
-  try { localStorage.setItem("cart", JSON.stringify([...cart])); } catch {}
+  try { localStorage.setItem("cart", JSON.stringify(cart)); } catch {}
 }
 function loadCart() {
   try {
-    const saved = JSON.parse(localStorage.getItem("cart") || "[]");
-    for (const [id, qty] of saved)
-      if (products.some((p) => p.id === id) && Number.isInteger(qty) && qty > 0)
-        cart.set(id, Math.min(qty, 10));
+    const saved = JSON.parse(localStorage.getItem("cart") || "{}");
+    for (const p of products) {
+      const qty = saved[p.id];
+      if (Number.isInteger(qty) && qty > 0) cart[p.id] = Math.min(qty, 10);
+    }
   } catch {}
 }
 
-const money = (n) => "$" + n.toFixed(2);
-
-// Build elements with textContent only, never innerHTML.
-function el(tag, cls, text) {
-  const node = document.createElement(tag);
-  if (cls) node.className = cls;
-  if (text !== undefined) node.textContent = text;
-  return node;
+function money(n) {
+  return "$" + n.toFixed(2);
 }
 
 function show(text, cls) {
@@ -38,66 +33,82 @@ function show(text, cls) {
   msg.className = "msg " + cls;
 }
 
+// All text below is set with textContent, never innerHTML.
+function cell(text, cls) {
+  const td = document.createElement("td");
+  td.textContent = text;
+  if (cls) td.className = cls;
+  return td;
+}
+
 function renderProducts() {
   const query = searchEl.value.trim();
-  const matches = products.filter((p) =>
-    p.name.toLowerCase().includes(query.toLowerCase()));
+  const list = products.filter(p => p.name.toLowerCase().includes(query.toLowerCase()));
 
-  // FIX 9 - the search term is shown with textContent, so markup in it is never executed.
-  searchInfo.textContent = query ? `Results for "${query}": ${matches.length}` : "";
+  // FIX 9 - search term shown with textContent, so markup in it is not executed.
+  searchInfo.textContent = query ? 'Results for "' + query + '": ' + list.length : "";
 
-  productsEl.replaceChildren();
-  for (const p of matches) {
-    const card = el("div", "card");
-    const btn = el("button", null, "Add to cart");
+  productsEl.textContent = "";
+  for (const p of list) {
+    const btn = document.createElement("button");
+    btn.textContent = "Add";
     btn.addEventListener("click", () => changeQty(p.id, 1));
-    card.append(
-      el("div", "emoji", p.emoji),
-      el("div", "name", p.name),
-      el("div", "desc", p.description),
-      el("div", "price", money(p.price)),
-      btn
-    );
-    productsEl.append(card);
+
+    const tr = document.createElement("tr");
+    tr.append(cell(p.name), cell(p.description, "desc"), cell(money(p.price), "price"));
+    const td = document.createElement("td");
+    td.append(btn);
+    tr.append(td);
+    productsEl.append(tr);
   }
 }
 
 function renderCart() {
-  cartEl.replaceChildren();
+  cartEl.textContent = "";
   let total = 0;
-  for (const [id, qty] of cart) {
-    const p = products.find((x) => x.id === id);
+  for (const p of products) {
+    const qty = cart[p.id];
+    if (!qty) continue;
     total += p.price * qty;
 
-    const minus = el("button", null, "−");
-    const plus  = el("button", null, "+");
-    minus.addEventListener("click", () => changeQty(id, -1));
-    plus.addEventListener("click", () => changeQty(id, 1));
+    const minus = document.createElement("button");
+    minus.textContent = "-";
+    minus.addEventListener("click", () => changeQty(p.id, -1));
+    const plus = document.createElement("button");
+    plus.textContent = "+";
+    plus.addEventListener("click", () => changeQty(p.id, 1));
 
-    const qtyBox = el("span", "qty");
-    qtyBox.append(minus, el("span", null, String(qty)), plus);
+    const name = document.createElement("span");
+    name.textContent = p.name;
+    const qtyBox = document.createElement("span");
+    qtyBox.append(minus, qty, plus);
 
-    const li = el("li");
-    li.append(el("span", null, p.name), qtyBox);
+    const li = document.createElement("li");
+    li.append(name, qtyBox);
     cartEl.append(li);
   }
-  if (cart.size === 0) cartEl.append(el("li", null, "Cart is empty."));
+  const empty = Object.keys(cart).length === 0;
+  if (empty) {
+    const li = document.createElement("li");
+    li.textContent = "Cart is empty.";
+    cartEl.append(li);
+  }
   totalEl.textContent = money(total);
-  checkoutEl.disabled = cart.size === 0;
+  checkoutEl.disabled = empty;
 }
 
-function changeQty(id, delta) {
-  const qty = (cart.get(id) || 0) + delta;
-  if (qty <= 0) cart.delete(id);
-  else cart.set(id, Math.min(qty, 10));
+function changeQty(id, change) {
+  const qty = (cart[id] || 0) + change;
+  if (qty <= 0) delete cart[id];
+  else cart[id] = Math.min(qty, 10);
   saveCart();
   show("", "");
   renderCart();
 }
 
 checkoutEl.addEventListener("click", async () => {
-  // Only ids and quantities are sent; the server looks up prices itself.
-  const items = [...cart].map(([id, qty]) => ({ id, qty }));
+  // Only ids and quantities are sent. The server looks up the prices itself.
+  const items = Object.keys(cart).map(id => ({ id: Number(id), qty: cart[id] }));
   try {
     const res = await fetch("/api/checkout", {
       method: "POST",
@@ -106,12 +117,12 @@ checkoutEl.addEventListener("click", async () => {
     });
     const data = await res.json();
     if (res.ok) {
-      cart.clear();
+      cart = {};
       saveCart();
       renderCart();
-      show(`Order placed! Total charged: ${money(data.total)}`, "ok");
+      show("Order placed. Total charged: " + money(data.total), "ok");
     } else if (res.status === 401) {
-      show("Please log in to check out. Redirecting…", "err");
+      show("Please log in to check out.", "err");
       setTimeout(() => { window.location.href = "index.html"; }, 1000);
     } else {
       show(data.message, "err");
@@ -122,35 +133,42 @@ checkoutEl.addEventListener("click", async () => {
 });
 
 async function renderAccount() {
-  accountEl.replaceChildren();
-  const res = await fetch("/api/me").catch(() => null);
+  accountEl.textContent = "";
+  let res = null;
+  try { res = await fetch("/api/me"); } catch {}
+
   if (res && res.ok) {
-    const { email } = await res.json();
-    const logout = el("button", null, "Logout");
+    const data = await res.json();
+    const logout = document.createElement("button");
+    logout.textContent = "Logout";
     logout.addEventListener("click", async () => {
-      await fetch("/api/logout", { method: "POST" }).catch(() => {});
+      try { await fetch("/api/logout", { method: "POST" }); } catch {}
       renderAccount();
     });
-    accountEl.append(el("span", null, email), logout);
+    accountEl.append("Logged in as " + data.email, logout);
   } else {
-    const login = el("a", null, "Login");
+    const login = document.createElement("a");
     login.href = "index.html";
+    login.textContent = "Login";
     accountEl.append(login);
   }
 }
 
 searchEl.addEventListener("input", renderProducts);
 
-(async () => {
+async function start() {
   searchEl.value = new URLSearchParams(location.search).get("q") || "";
   renderAccount();
   try {
     const res = await fetch("/api/products");
     products = await res.json();
-    loadCart();
-    renderProducts();
-    renderCart();
   } catch {
-    show("Could not load products.", "err");
+    show("Could not load products. Start the server with npm start.", "err");
+    return;
   }
-})();
+  loadCart();
+  renderProducts();
+  renderCart();
+}
+
+start();

@@ -35,12 +35,12 @@ app.post("/api/login", (req, res) => {
 
 // --- Shop ---
 const products = [
-  { id: 1, name: "Apple Juice",       emoji: "🍎", price: 1.99, description: "Crisp, fresh-pressed apples." },
-  { id: 2, name: "Orange Juice",      emoji: "🍊", price: 2.99, description: "Sunny and full of vitamin C." },
-  { id: 3, name: "Banana Smoothie",   emoji: "🍌", price: 3.49, description: "Creamy banana blended smooth." },
-  { id: 4, name: "Strawberry Juice",  emoji: "🍓", price: 3.99, description: "Sweet summer strawberries." },
-  { id: 5, name: "Watermelon Cooler", emoji: "🍉", price: 2.49, description: "Light and refreshing." },
-  { id: 6, name: "Green Detox",       emoji: "🥬", price: 4.49, description: "Kale, cucumber and green apple." }
+  { id: 1, name: "Apple Juice",       price: 1.99, description: "Crisp, fresh-pressed apples." },
+  { id: 2, name: "Orange Juice",      price: 2.99, description: "Sunny and full of vitamin C." },
+  { id: 3, name: "Banana Smoothie",   price: 3.49, description: "Creamy banana blended smooth." },
+  { id: 4, name: "Strawberry Juice",  price: 3.99, description: "Sweet summer strawberries." },
+  { id: 5, name: "Watermelon Cooler", price: 2.49, description: "Light and refreshing." },
+  { id: 6, name: "Green Detox",       price: 4.49, description: "Kale, cucumber and green apple." }
 ];
 
 app.get("/api/products", (req, res) => res.json(products));

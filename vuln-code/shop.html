@@ -4,65 +4,72 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <!-- No Content-Security-Policy: injected markup and event handlers can run -->
-  <title>Juice Shop (Insecure)</title>
+  <title>Juice Shop - Shop</title>
   <style>
-    * { box-sizing:border-box; }
-    body { font-family: system-ui, sans-serif; background:#effaea; margin:0; color:#222; }
-    header { background:#2b7fc0; color:#fff; padding:1rem 1.5rem; display:flex;
-             justify-content:space-between; align-items:center; }
-    header h1 { margin:0; font-size:1.3rem; }
-    header small { font-size:.65rem; letter-spacing:.05em; opacity:.85; }
-    header a { color:#fff; font-size:.9rem; }
-    #account { font-size:.9rem; display:flex; gap:.75rem; align-items:center; }
-    #account button { background:#fff; color:#2b7fc0; padding:.3rem .7rem; }
-    main { max-width:1000px; margin:0 auto; padding:1.5rem 1rem; display:grid;
-           grid-template-columns: 1fr 300px; gap:1.5rem; }
-    @media (max-width: 760px) { main { grid-template-columns: 1fr; } }
-    .search { width:100%; padding:.6rem; border:1px solid #ccc; border-radius:6px;
-              margin-bottom:.5rem; font-size:1rem; }
-    .search-info { font-size:.9rem; color:#555; min-height:1.2em; margin-bottom:.75rem; }
-    .grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(180px, 1fr)); gap:1rem; }
-    .card { background:#fff; border-radius:12px; padding:1rem; text-align:center;
-            box-shadow:0 4px 16px rgba(0,0,0,.08); }
-    .emoji { font-size:3rem; }
-    .name { font-weight:600; margin:.5rem 0 .25rem; }
-    .desc { font-size:.8rem; color:#666; min-height:2.4em; }
-    .price { color:#2b7fc0; font-weight:700; margin:.5rem 0; }
-    button { padding:.5rem .8rem; border:0; border-radius:6px; background:#2b7fc0;
+    body { font-family: system-ui, sans-serif; background:#effaea; margin:0; }
+    .top { background:#fff; border-bottom:2px solid #2b7fc0; padding:.75rem 1.5rem;
+           display:flex; justify-content:space-between; align-items:center; }
+    .top h1 { font-size:1.2rem; margin:0; color:#2b7fc0; }
+    .tag { font-size:.7rem; color:#2b7fc0; font-weight:700; letter-spacing:.05em; }
+    #account { font-size:.85rem; }
+    #account a { color:#2b7fc0; font-weight:600; }
+    #account button { margin-left:.5rem; }
+    .wrap { max-width:900px; margin:1.5rem auto; padding:0 1rem; display:flex;
+            gap:1.5rem; align-items:flex-start; flex-wrap:wrap; }
+    .card { background:#fff; padding:1.5rem; border-radius:12px; border:2px solid #2b7fc0;
+            box-shadow:0 4px 16px rgba(0,0,0,.1); }
+    .products { flex:1 1 480px; }
+    .cart { flex:0 1 260px; }
+    h2 { font-size:1rem; margin-top:0; color:#2b7fc0; }
+    input { width:100%; padding:.5rem; box-sizing:border-box; border:1px solid #ccc;
+            border-radius:6px; }
+    table { width:100%; border-collapse:collapse; margin-top:.75rem; font-size:.9rem; }
+    th { text-align:left; font-size:.8rem; color:#555; border-bottom:1px solid #ccc; padding:.4rem; }
+    td { padding:.5rem .4rem; border-bottom:1px solid #eee; vertical-align:middle; }
+    td.desc { color:#666; font-size:.8rem; }
+    td.price { white-space:nowrap; }
+    button { padding:.35rem .7rem; border:0; border-radius:6px; background:#2b7fc0;
              color:#fff; font-weight:600; cursor:pointer; }
     button:disabled { background:#9bbfdc; cursor:default; }
-    .cart { background:#fff; border-radius:12px; padding:1rem; border:2px solid #2b7fc0;
-            align-self:start; position:sticky; top:1rem; }
-    .cart h2 { margin-top:0; font-size:1.1rem; color:#2b7fc0; }
-    .cart ul { list-style:none; padding:0; margin:0; }
+    .cart ul { list-style:none; padding:0; margin:0; font-size:.9rem; }
     .cart li { display:flex; justify-content:space-between; align-items:center;
-               padding:.4rem 0; border-bottom:1px solid #eee; font-size:.9rem; }
-    .qty button { padding:.1rem .45rem; margin:0 .2rem; }
-    .total { font-weight:700; margin:1rem 0; display:flex; justify-content:space-between; }
-    .cart > button { width:100%; }
+               padding:.35rem 0; border-bottom:1px solid #eee; }
+    .cart li button { padding:.1rem .45rem; margin:0 .2rem; }
+    .total { font-weight:600; margin:.75rem 0; display:flex; justify-content:space-between; }
+    #checkout { width:100%; padding:.6rem; }
+    .info { font-size:.8rem; color:#555; margin-top:.5rem; min-height:1em; }
     .msg { margin-top:.75rem; font-size:.9rem; min-height:1.2em; }
     .err { color:#c0392b; } .ok { color:#1e8449; }
   </style>
 </head>
 <body>
-  <header>
-    <h1>🧃 Juice Shop <small>INSECURE VERSION</small></h1>
+  <div class="top">
+    <div>
+      <span class="tag">INSECURE VERSION</span>
+      <h1>Juice Shop</h1>
+    </div>
     <div id="account"></div>
-  </header>
-  <main>
-    <section>
-      <input class="search" id="search" type="search" placeholder="Search juices…" />
-      <div class="search-info" id="searchInfo"></div>
-      <div class="grid" id="products"></div>
-    </section>
-    <aside class="cart">
-      <h2>Your cart</h2>
+  </div>
+
+  <div class="wrap">
+    <div class="card products">
+      <h2>Products</h2>
+      <input type="search" id="search" placeholder="Search juices" />
+      <div class="info" id="searchInfo"></div>
+      <table>
+        <thead><tr><th>Juice</th><th>Description</th><th>Price</th><th></th></tr></thead>
+        <tbody id="products"></tbody>
+      </table>
+    </div>
+
+    <div class="card cart">
+      <h2>Cart</h2>
       <ul id="cartItems"></ul>
       <div class="total"><span>Total</span><span id="cartTotal">$0.00</span></div>
       <button id="checkout" disabled>Checkout</button>
       <div class="msg" id="msg"></div>
-    </aside>
-  </main>
+    </div>
+  </div>
   <script src="shop.js"></script>
 </body>
 </html>
