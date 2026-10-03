@@ -1,0 +1,16 @@
+{
+  "name": "juice-shop-login",
+  "version": "1.0.0",
+  "description": "Juice Shop-style login form shown before (vulnerable) and after (secure) fixing SQL Injection and XSS.",
+  "scripts": {
+    "start": "node server.js",
+    "vuln": "node vulnerable/server.js",
+    "secure": "node secure/server.js"
+  },
+  "dependencies": {
+    "alasql": "^4.6.6",
+    "bcryptjs": "^2.4.3",
+    "express": "^4.19.2"
+  },
+  "license": "MIT"
+}
